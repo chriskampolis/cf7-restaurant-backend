@@ -1,6 +1,6 @@
-from rest_framework import viewsets
-from .models import User, MenuItem
-from .serializers import UserSerializer, MenuItemSerializer
+from rest_framework import viewsets, permissions
+from .models import User, MenuItem, Order
+from .serializers import UserSerializer, MenuItemSerializer, OrderSerializer
 from .permissions import IsManager, IsManagerOrReadOnlyMenuItem
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -13,21 +13,14 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     serializer_class = MenuItemSerializer
     permission_classes = [IsManagerOrReadOnlyMenuItem]  # Employees read-only, managers CRUD
 
-# from django.shortcuts import render
-# from django.contrib.auth.models import User
-# from rest_framework import generics
-# from .models import User
-# from .serializers import UserSerializer
-# from rest_framework.permissions import IsAuthenticated, AllowAny
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [permissions.IsAuthenticated] # Both employees and / or managers can place orders
 
-# Create your views here.
-
-# class IsManager(permissions.BasePermission):
-#     def has_permission(self, request, view):
-#         return request.user.is_authenticated and request.user.role == 'manager'
-
-
-# class CreateUserView(generics.CreateAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        # Users see their orders only, unless they are manager
+        user = self.request.user
+        if user.is_manager():
+            return Order.objects.all()
+        return Order.objects.filter(placed_by=user)
