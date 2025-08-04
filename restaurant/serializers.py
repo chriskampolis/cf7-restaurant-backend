@@ -26,7 +26,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'table_number', 'placed_by' 'created_at', 'items']
+        fields = ['id', 'table_number', 'placed_by', 'created_at', 'items']
         read_only_fields = ['placed_by', 'created_at']
     
     def create(self, validated_data):
@@ -40,3 +40,30 @@ class OrderSerializer(serializers.ModelSerializer):
             item.save() 
         
         return order
+
+class OrderItemUpdateSerializer(serializers.Serializer):
+    old_menu_item = serializers.IntegerField(required=False)
+    new_menu_item = serializers.IntegerField(required=False)
+    menu_item = serializers.IntegerField(required=False)
+    quantity = serializers.IntegerField(required=False, min_value=0)
+
+    def validate(self, data):
+        old_item = data.get("old_menu_item")
+        new_item = data.get("new_menu_item")
+        menu_item = data.get("menu_item")
+        quantity = data.get("quantity")
+
+        # Valid replacement
+        if old_item and new_item:
+            if quantity is None:
+                raise serializers.ValidationError("Quantity is required when replacing items.")
+            return data
+        
+        if menu_item is not None:
+            if quantity is None:
+                raise serializers.ValidationError("Quantity is required when specifying menu_item.")
+            return data
+        
+        raise serializers.ValidationError(
+            "You must provide either (old_menu_item and new_menu_item) for replacement, or (menu_item  and quantity) for update/delete."
+            )

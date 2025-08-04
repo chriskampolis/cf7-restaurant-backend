@@ -42,8 +42,27 @@ class OrderItem(models.Model):
 
     def save(self, *args, **kwargs):
         """ Decrease availability on the corresponding MenuItem """
-        if self.menu_item.availability < self.quantity:
-            raise ValueError("Not enough availability.")
-        self.menu_item.availability -= self.quantity
-        self.menu_item.save()
+        if not self.pk:  # Only reduce stock if the object doesn't exist yet
+            if self.menu_item.availability < self.quantity:
+                raise ValueError("Not enough availability.")
+            self.menu_item.availability -= self.quantity
+            self.menu_item.save()
         super().save(*args, **kwargs)
+
+    def update_quantity(self, new_quantity):
+        diff = new_quantity - self.quantity
+        if diff > 0:
+            if self.menu_item.availability < diff:
+                raise ValueError("Not enough availability to increase quantity.")
+            self.menu_item.availability -= diff
+        else:
+            self.menu_item.availability += abs(diff)
+        
+        self.menu_item.save()
+        self.quantity = new_quantity
+        self.save()
+
+    def restore_stock_and_delete(self):
+        self.menu_item.availability += self.quantity
+        self.menu_item.save()
+        self.delete()
