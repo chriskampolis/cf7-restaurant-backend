@@ -46,7 +46,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Items added successfully."}, status=status.HTTP_201_CREATED)
     
-    @action(detail=True, methods=['patch'], url_path='update_item')
+    @action(detail=True, methods=['patch'], url_path='update-item')
     def update_item(self, request, pk=None):
         order = self.get_object()
         serializer = OrderItemUpdateSerializer(data=request.data)
