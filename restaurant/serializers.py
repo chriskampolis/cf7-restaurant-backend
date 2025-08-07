@@ -44,6 +44,8 @@ class OrderSerializer(serializers.ModelSerializer):
 class OrderItemUpdateSerializer(serializers.Serializer):
     old_menu_item = serializers.IntegerField(required=False)
     new_menu_item = serializers.IntegerField(required=False)
+    old_quantity = serializers.IntegerField(required=False, min_value=1)
+    new_quantity = serializers.IntegerField(required=False, min_value=1)
     menu_item = serializers.IntegerField(required=False)
     quantity = serializers.IntegerField(required=False, min_value=0)
 
@@ -52,18 +54,24 @@ class OrderItemUpdateSerializer(serializers.Serializer):
         new_item = data.get("new_menu_item")
         menu_item = data.get("menu_item")
         quantity = data.get("quantity")
+        old_qty = data.get("old_quantity")
+        new_qty = data.get("new_quantity")
 
-        # Valid replacement
+        # Replacement logic
         if old_item and new_item:
-            if quantity is None:
-                raise serializers.ValidationError("Quantity is required when replacing items.")
+            if old_qty is None:
+                raise serializers.ValidationError("old_quantity is required when replacing items.")
+            if new_qty is None:
+                raise serializers.ValidationError("new_quantity is required when replacing items.")
             return data
         
+        # Update / Delete logic
         if menu_item is not None:
             if quantity is None:
                 raise serializers.ValidationError("Quantity is required when specifying menu_item.")
             return data
         
         raise serializers.ValidationError(
-            "You must provide either (old_menu_item and new_menu_item) for replacement, or (menu_item  and quantity) for update/delete."
+            "Provide either (old_menu_item, new_menu_item, old_quantity, new_quantity) for replacement, "
+            "or (menu_item, quantity) for update/delete."
             )
