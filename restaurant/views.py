@@ -40,10 +40,22 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         for item_data in serializer.validated_data:
+            menu_item = item_data['menu_item']
+            quantity = item_data['quantity']
+
             try:
-                OrderItem.objects.create(order=order, **item_data)
-            except ValueError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                # Try to increase the quantity of an existing item in the order
+                existing_item = OrderItem.objects.get(order=order, menu_item=menu_item)
+                try:
+                    existing_item.update_quantity(existing_item.quantity + quantity)
+                except ValueError as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            except OrderItem.DoesNotExist:
+                # Add new item for the specified order
+                try:
+                    OrderItem.objects.create(order=order, menu_item=menu_item, quantity=quantity)
+                except ValueError as e:
+                    return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Items added successfully."}, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=['patch'], url_path='update-item')
@@ -57,13 +69,27 @@ class OrderViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
         
         try:
-            # Replace an item: remove old / add new
+            # Partial replacement
             if data.get('old_menu_item') and data.get('new_menu_item'):
                 old_item = order.items.get(menu_item__id=data['old_menu_item'])
-                old_item.restore_stock_and_delete()
 
+                if old_item.quantity < data['old_quantity']:
+                    return Response({"error": "Not enough quantity to replace"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Reduce or delete old item
+                if old_item.quantity == data['old_quantity']:
+                    old_item.restore_stock_and_delete()
+                else:
+                    old_item.update_quantity(old_item.quantity - data['old_quantity'])
+                
+                # Add or update new item
                 new_menu_item = MenuItem.objects.get(id=data['new_menu_item'])
-                OrderItem.objects.create(order=order, menu_item=new_menu_item, quantity=data['quantity'])
+                try:
+                    new_item = order.items.get(menu_item=new_menu_item)
+                    new_item.update_quantity(new_item.quantity + data['new_quantity'])
+                except:
+                    OrderItem.objects.create(order=order, menu_item=new_menu_item, quantity=data['new_quantity'])
+                    
                 return Response({"message": "Item replaced successfully."}, status=status.HTTP_200_OK)
             
             # Delete item
