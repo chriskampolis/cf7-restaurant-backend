@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, MenuItem, Order, OrderItem
 from .serializers import UserSerializer, MenuItemSerializer, OrderSerializer, OrderItemSerializer
-from .permissions import IsManager, IsManagerOrReadOnlyMenuItem
+from .permissions import IsManager, ReadOnlyOrIsManager
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -22,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
-    permission_classes = [IsManagerOrReadOnlyMenuItem]  # Employees read-only, managers CRUD
+    permission_classes = [ReadOnlyOrIsManager]  
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer

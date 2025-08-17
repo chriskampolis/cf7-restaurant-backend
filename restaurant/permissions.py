@@ -1,15 +1,18 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-class IsManager(permissions.BasePermission):
-    """Only managers have full access."""
+class IsManager(BasePermission):
+    """User is authenticated and is a manager."""
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_manager()
 
-class IsManagerOrReadOnlyMenuItem(permissions.BasePermission):
-    """Managers can CRUD MenuItems; employees can only read."""
+class ReadOnlyOrIsManager(BasePermission):
+    """
+    Allow anyone to read (GET, HEAD, OPTIONS).
+    Only managers can create/update/delete.
+    """
 
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return request.user.is_authenticated
+        if request.method in SAFE_METHODS:
+            return True
         return request.user.is_authenticated and request.user.is_manager()
