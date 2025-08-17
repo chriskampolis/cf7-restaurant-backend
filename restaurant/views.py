@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, MenuItem, Order, OrderItem
@@ -10,6 +11,14 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsManager]  # Only managers can CRUD users
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        """
+        Returns the currently authenticated user.
+        """
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
@@ -18,7 +27,7 @@ class MenuItemViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     queryset = Order.objects.all().select_related('placed_by').prefetch_related('items__menu_item')
-    permission_classes = [permissions.IsAuthenticated] # Both employees and / or managers can place orders
+    permission_classes = [IsAuthenticated] # Both employees and / or managers can place orders
 
     def get_queryset(self): # do not restrict employees to their orders only - keep as it is.
         table = self.request.query_params.get('table')
