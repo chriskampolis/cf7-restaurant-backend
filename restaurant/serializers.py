@@ -9,7 +9,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta: 
         model = User
-        fields = ['id', 'username', 'password', 'role']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'is_staff', 'is_active', 'password', 'role']
         extra_kwargs = {"password": {"write_only":True}}
 
     def create(self, validated_data):
