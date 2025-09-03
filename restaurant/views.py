@@ -1,9 +1,9 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import User, MenuItem, Order, OrderItem
-from .serializers import UserSerializer, MenuItemSerializer, OrderSerializer, OrderItemSerializer
+from .serializers import UserSerializer, MenuItemSerializer, OrderSerializer, OrderItemSerializer, CompletedOrderSerializer
 from .permissions import IsManager, ReadOnlyOrIsManager
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -22,14 +22,15 @@ class UserViewSet(viewsets.ModelViewSet):
 class MenuItemViewSet(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
-    permission_classes = [ReadOnlyOrIsManager]  
+    permission_classes = [ReadOnlyOrIsManager] # Employees can read, only managers can edit
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     queryset = Order.objects.all().select_related('placed_by').prefetch_related('items__menu_item')
-    permission_classes = [IsAuthenticated] # Both employees and / or managers can place orders
+    permission_classes = [IsAuthenticated] # Any logged-in employee/manager can create orders
 
-    def get_queryset(self): # do not restrict employees to their orders only - keep as it is.
+    def get_queryset(self):
+        """Optionally filter orders by table number (e.g. ?table=3)."""
         table = self.request.query_params.get('table')
         queryset = super().get_queryset()
         if table:
@@ -39,8 +40,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='submit')
     def submit_order(self, request):
         """
-        Creates a new in_progress order if none exists for the table.
-        If one exists, replaces all items.
+        Submit a new order or update an existing in-progress order for a table.
+        If updating, old items are removed and replaced with new ones.
         """
         table_number = request.data.get('table_number')
         items_data = request.data.get('items', [])
@@ -90,81 +91,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         order.save(update_fields=['status'])
 
         return Response({"message": f"Order {order.id} marked as completed."}, status=status.HTTP_200_OK)
-    
-    # @action(detail=True, methods=['post'], url_path='add-items')
-    # def add_items(self, request, pk=None):
-    #     order = self.get_object()
-    #     serializer = OrderItemSerializer(data=request.data, many=True)
 
-    #     if not serializer.is_valid():
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     for item_data in serializer.validated_data:
-    #         menu_item = item_data['menu_item']
-    #         quantity = item_data['quantity']
+class CompletedOrdersView(generics.ListAPIView):
+    serializer_class = CompletedOrderSerializer
+    permission_classes = [IsManager]   # managers only
 
-    #         try:
-    #             # Try to increase the quantity of an existing item in the order - instead of creating duplicate
-    #             existing_item = OrderItem.objects.get(order=order, menu_item=menu_item)
-    #             try:
-    #                 existing_item.update_quantity(existing_item.quantity + quantity)
-    #             except ValueError as e:
-    #                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    #         except OrderItem.DoesNotExist:
-    #             # Add new item for the specified order
-    #             try:
-    #                 OrderItem.objects.create(order=order, menu_item=menu_item, quantity=quantity)
-    #             except ValueError as e:
-    #                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    #     return Response({"message": "Items added successfully."}, status=status.HTTP_201_CREATED)
-    
-    # @action(detail=True, methods=['patch'], url_path='update-item')
-    # def update_item(self, request, pk=None):
-    #     order = self.get_object()
-    #     serializer = OrderItemUpdateSerializer(data=request.data)
-
-    #     if not serializer.is_valid():
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-    #     data = serializer.validated_data
-        
-    #     try:
-    #         # Partial replacement
-    #         if data.get('old_menu_item') and data.get('new_menu_item'):
-    #             old_item = order.items.get(menu_item__id=data['old_menu_item'])
-
-    #             if old_item.quantity < data['old_quantity']:
-    #                 return Response({"error": "Not enough quantity to replace"}, status=status.HTTP_400_BAD_REQUEST)
-                
-    #             # Reduce or delete old item
-    #             if old_item.quantity == data['old_quantity']:
-    #                 old_item.restore_stock_and_delete()
-    #             else:
-    #                 old_item.update_quantity(old_item.quantity - data['old_quantity'])
-                
-    #             # Add or update new item
-    #             new_menu_item = MenuItem.objects.get(id=data['new_menu_item'])
-    #             try:
-    #                 new_item = order.items.get(menu_item=new_menu_item)
-    #                 new_item.update_quantity(new_item.quantity + data['new_quantity'])
-    #             except:
-    #                 OrderItem.objects.create(order=order, menu_item=new_menu_item, quantity=data['new_quantity'])
-                    
-    #             return Response({"message": "Item replaced successfully."}, status=status.HTTP_200_OK)
-            
-    #         # Delete item
-    #         elif data.get('menu_item') and data.get('quantity') == 0:
-    #             item = order.items.get(menu_item__id=data['menu_item'])
-    #             item.restore_stock_and_delete()
-    #             return Response({"message": "Item removed successfully."}, status=status.HTTP_200_OK)
-            
-    #         # Update quantity
-    #         elif data.get('menu_item') and 'quantity' in data:
-    #             item = order.items.get(menu_item__id=data['menu_item'])
-    #             item.update_quantity(data['quantity'])
-    #             return Response({"message": "Item updated successfully."}, status=status.HTTP_200_OK)
-            
-    #     except (OrderItem.DoesNotExist, MenuItem.DoesNotExist):
-    #         return Response({"error": "Item not found."}, status=status.HTTP_404_NOT_FOUND)
-    #     except ValueError as e:
-    #         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        """Return all completed orders sorted by most recent first."""
+        return Order.objects.filter(status="completed").order_by("-created_at")
