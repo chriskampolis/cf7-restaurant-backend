@@ -25,22 +25,6 @@ class CustomUserAdmin(BaseUserAdmin):
             "fields": ("username", "email", "first_name", "last_name", "role", "password1", "password2", "is_staff", "is_superuser", "is_active")}
         ),
     )
-     
-
-# Improve display of Order and OrderItem in admin page
-
-# class OrderItemInline(admin.TabularInline):
-#     model = OrderItem
-#     extra = 0
-
-# @admin.register(Order)
-# class OrderAdmin(admin.ModelAdmin):
-#     list_display = ('id', 'table_number', 'placed_by', 'created_at')
-#     inlines = [OrderItemInline]
-
-# @admin.register(OrderItem)
-# class OrderItemAdmin(admin.ModelAdmin):
-#     list_display = ('order', 'menu_item', 'quantity')
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(MenuItem)
