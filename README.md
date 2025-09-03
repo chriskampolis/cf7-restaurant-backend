@@ -1,37 +1,36 @@
 # 🍽️ Restaurant Backend
 ---
 
-## Overview
----
 
+## Overview
 This project is built with **Python (Django REST Framework)** and **MySQL**, providing the API and business logic that powers restaurant operations. It is designed to make day-to-day workflow easier and more efficient for employees and managers, while keeping the system secure and organized.
 
+---
+
  ## 👨‍🍳 Core Functionality
- ---
+ 
 - **Menu Access** – The restaurant’s menu is publicly visible to all visitors.
 - **Order Management** – Authenticated employees and managers can create and update orders for specific tables.
 - **Billing Workflow** – When a table requests the bill from a waiter, the order can be marked as completed, automatically freeing that table for new orders.
 
+---
+
  ## 🔑 Role-Based Access
- ---
+
 - **Employees**
 
     - View the menu.
-
     - Take and register orders for tables.
 
 - **Managers**
 
     - Manage the menu (add, edit, or delete items).
-
     - Manage users (add, edit, or delete employees).
-
     - Access the completed orders log (orders grouped by table and timestamp) for auditing purposes.
 
 ---
 
 ## 🛠️ Tech Stack
----
 
 - **Django** – High-level Python web framework used for building backend logic, models, and routing.
 - **Django REST Framework (DRF)** – Adds REST API functionality to Django.  
@@ -40,8 +39,9 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
 - **django-cors-headers** – Enables CORS for frontend-backend communication.  
 - **python-dotenv** – Environment variables.
 
-## 🚀 Backend Setup (Django + MySQL)
 ---
+
+## 🚀 Backend Setup (Django + MySQL)
 
  1. **Clone the Repository**
     ```bash
@@ -95,3 +95,5 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
    ```
 The API will be available at:
 👉 http://127.0.0.1:8000/
+
+---
