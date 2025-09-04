@@ -11,7 +11,7 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
  
 - **Menu Access** – The restaurant’s menu is publicly visible to all visitors.
 - **Order Management** – Authenticated employees and managers can create and update orders for specific tables.
-- **Billing Workflow** – When a table requests the bill from a waiter, the order can be marked as completed, automatically freeing that table for new orders.
+- **Billing Workflow** – When a table is ready to settle the bill, the order can be marked as completed, automatically freeing that table for new orders.
 
 ---
 
@@ -111,8 +111,6 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
    ```
 
 8. **Create Menu**
-   Note: Items on the menu can be created by a manager from the UI's Menu Items page.
-         Or they can be inserted into the database (adjust db_name if necessary) - example values:
    ```sql
    INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (1,'Greek Salad',7.50,14,'APPETIZER');
    INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (2,'Fava beans with caper leaves',6.00,8,'APPETIZER');
@@ -127,6 +125,7 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
    INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (11,'Souroti',3.00,13,'DRINK');
    INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (12,'Mamos beer',4.00,18,'DRINK');
    ```
+   Items on the menu can be inserted into the database - example values above (adjust db_name if necessary). Or they can be created by a manager from the UI's Menu Items page. 
 
 9. **Run the Application**
    ```bash
