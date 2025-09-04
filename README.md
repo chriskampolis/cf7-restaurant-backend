@@ -64,6 +64,7 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
 4. **Configure Environment**
    ```bash
    cp .env.example .env
+   copy .env.example .env   # use copy if cp is not working
    # Edit .env with SECRET_KEY and database settings
    ```
    
@@ -73,14 +74,30 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
    # Paste the output into .env as SECRET_KEY=your-generated-key
    ```
 
+   Variables to be filled for the .env file: 
+   ```bash
+   DEBUG=True
+   SECRET_KEY=your-secret-key
+
+   ALLOWED_HOSTS=127.0.0.1
+
+   DB_NAME=db_name
+   DB_USER=db_user
+   DB_PASSWORD=db_password
+   DB_HOST=localhost
+   DB_PORT=3306
+
+   CORS_ALLOW_CREDENTIALS=True
+   CORS_ALLOWED_ORIGINS=http://localhost:5173
+   ```
+
 5. **Create the MySQL Database**
    ```sql
-   CREATE DATABASE restaurant_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE SCHEMA `restaurant_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci ;
    ```
 
 6. **Apply Migrations**
    ```bash
-   python manage.py makemigrations
    python manage.py migrate
    ```
 
@@ -88,8 +105,30 @@ This project is built with **Python (Django REST Framework)** and **MySQL**, pro
    ```bash
    python manage.py createsuperuser
    ```
+   New users are auto-set as employees, to make the superuser a manager (adjust db_name if necessary):
+   ```sql
+   UPDATE `restaurant_db`.`restaurant_user` SET `role` = 'manager' WHERE (`id` = '1');
+   ```
 
-8. **Run the Application**
+8. **Create Menu**
+   Note: Items on the menu can be created by a manager from the UI's Menu Items page.
+         Or they can be inserted into the database (adjust db_name if necessary) - example values:
+   ```sql
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (1,'Greek Salad',7.50,14,'APPETIZER');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (2,'Fava beans with caper leaves',6.00,8,'APPETIZER');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (3,'Grilled sardines',7.00,8,'APPETIZER');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (4,'Mussels with white wine',8.50,7,'APPETIZER');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (5,'Seafood risotto',12.50,8,'MAIN');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (6,'Sea bass with vegetables',15.00,9,'MAIN');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (7,'Shrimp pasta',13.50,7,'MAIN');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (8,'Melon sorbet',5.00,7,'DESSERT');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (9,'Seasonal fruit salad',7.00,10,'DESSERT');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (10,'Mineral water',1.50,23,'DRINK');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (11,'Souroti',3.00,13,'DRINK');
+   INSERT INTO restaurant_db.restaurant_menuitem (`id`,`name`,`price`,`availability`,`category`) VALUES (12,'Mamos beer',4.00,18,'DRINK');
+   ```
+
+9. **Run the Application**
    ```bash
    python manage.py runserver
    ```
