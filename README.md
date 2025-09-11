@@ -135,3 +135,9 @@ The API will be available at:
 👉 http://127.0.0.1:8000/
 
 ---
+
+## 📌 Future Development
+- `forms.py` and `admin.py` are reserved for future development (ex: better management interface / custom forms).
+- Additional roles for users with different permissions (ex: customer / head-chef).
+- Booking reservations: logged-in customers able to book tables.
+- Menu filtering - Allow users to filter menu items by category (ex: appetizers only), improving navigation for large menus.
